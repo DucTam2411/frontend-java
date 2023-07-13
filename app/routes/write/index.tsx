@@ -10,10 +10,10 @@ function WriteLink() {
   const actions = useWriteActions()
 
   return (
-    <BasicLayout title="링크 입력" hasBackButton>
+    <BasicLayout title="Enter the link" hasBackButton>
       <WriteFormTemplate
-        description="공유하고 싶은 URL을 입력하세요."
-        buttonText="다음"
+        description="Enter URL you want to share"
+        buttonText="Next"
         onSubmit={(e) => {
           e.preventDefault()
           navigate('/write/intro')
@@ -26,7 +26,9 @@ function WriteLink() {
           onChange={(e) => {
             actions.change('link', e.target.value)
           }}
-          errorMessage={state.error?.statusCode === 422 ? '유효하지 않은 URL입니다.' : undefined}
+          errorMessage={
+            state.error?.statusCode === 422 ? 'URL error.' : undefined
+          }
         />
       </WriteFormTemplate>
       {/* <Button onClick={() => navigate('/write/intro')}>다음</Button> */}

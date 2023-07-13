@@ -22,7 +22,7 @@ function UserAddon({ username }: { username: string }) {
   return (
     <Responsive>
       <WriteButton to="/write" size="small" variant="secondary">
-        새 글 작성
+        NEW POST
       </WriteButton>
       <Button variant="text" size="small" onClick={onOpen} ref={buttonRef}>
         <Block>

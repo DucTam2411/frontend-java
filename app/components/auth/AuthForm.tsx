@@ -87,14 +87,14 @@ function AuthForm({ mode, error }: Props) {
       </DesktopLogoLink>
       <InputGroup>
         <LabelInput
-          label="아이디"
+          label="Username"
           placeholder={usernamePlaceholder}
           disabled={isLoading}
           errorMessage={errors.username}
           {...inputProps.username}
         />
         <LabelInput
-          label="비밀번호"
+          label="Password"
           name="password"
           placeholder={passwordPlaceholder}
           disabled={isLoading}

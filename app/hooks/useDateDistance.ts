@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useReducer } from 'react'
 import { formatDistanceToNow } from 'date-fns'
-import ko from 'date-fns/locale/ko'
+import { vi } from 'date-fns/locale'
 
 export function useDateDistance(date: string | Date) {
   const [value, rerender] = useReducer((state) => !state, false)
@@ -14,14 +14,14 @@ export function useDateDistance(date: string | Date) {
 
   const formatted = useMemo(() => {
     const d = date instanceof Date ? date : new Date(date)
+    console.log('🚀 TAM ~ file: useDateDistance.ts:18 ~ formatted ~ d :', d)
     const diff = Date.now() - d.getTime()
 
     if (diff < 60 * 1000) {
-      return '방금 전'
+      return 'now'
     }
 
     return formatDistanceToNow(d, {
-      locale: ko,
       addSuffix: true,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps

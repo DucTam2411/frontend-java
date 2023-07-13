@@ -1,6 +1,6 @@
 import { Link } from '@remix-run/react'
 import styled from '@emotion/styled'
-import { type SearchResultItem } from '~/lib/api/types'
+import { Post, type SearchResultItem } from '~/lib/api/types'
 import { colors } from '~/lib/colors'
 import { Globe } from '../vectors'
 
@@ -10,21 +10,34 @@ interface Props {
 
 function SearchResultCard({ item }: Props) {
   const { publisher, author, highlight, likes } = item
+  console.log(
+    '🚀 TAM ~ file: SearchResultCard.tsx:13 ~ SearchResultCard ~ author:',
+    item,
+  )
+  const postItem = item as any as Post
   const link = `/items/${item.id}`
   return (
     <Block to={link}>
       <Publisher>
-        {publisher.favicon ? (
+        {publisher?.favicon ? (
           <img src={publisher.favicon} alt="favicon" />
         ) : (
           <Globe />
         )}
-        {author ? `${author} · ` : ''}
-        {publisher.name}
+        {author ? `${author.name} · ` : ''}
+        {publisher?.name ?? 'chicken'}
       </Publisher>
       {/** @todo: Secure this code **/}
-      <h3 dangerouslySetInnerHTML={{ __html: highlight.title }}></h3>
-      <p dangerouslySetInnerHTML={{ __html: highlight.body }}></p>
+      <h3
+        dangerouslySetInnerHTML={{
+          __html: postItem?.title ?? 'this is an title',
+        }}
+      ></h3>
+      <p
+        dangerouslySetInnerHTML={{
+          __html: postItem?.body ?? 'this is an long body',
+        }}
+      ></p>
       {likes > 0 ? (
         <LikesCount>좋아요 {likes.toLocaleString()}개</LikesCount>
       ) : null}

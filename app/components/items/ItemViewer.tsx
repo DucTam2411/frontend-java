@@ -17,29 +17,37 @@ import { useOpenDialog } from '~/states/dialog'
 import { deleteItem } from '~/lib/api/items'
 import Button from '../system/Button'
 import MarkdownIt from 'markdown-it'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { markdownStyles } from '~/lib/styles'
 
 interface Props {
   item: Post
   isMyItem: boolean
+  userLikedPost: string[]
 }
 
-function ItemViewer({ item, isMyItem }: Props) {
+function ItemViewer({ item, isMyItem, userLikedPost }: Props) {
   const { id, thumbnail, publisher, author, title, body, user, createdAt } =
     item
+  console.log('🚀 TAM ~ file: ItemViewer.tsx:31 ~ ItemViewer ~ item:', item)
 
   const itemOverride = useItemOverrideById(id)
   const dateDistance = useDateDistance(createdAt)
 
-  const isLiked = itemOverride?.isLiked ?? item.isLiked
-  const likes = itemOverride?.itemStats?.likes ?? 0
+  const likes = 0 as number
   const isBookmarked = itemOverride?.isBookmarked ?? item.isBookmarked
 
-  const { like, unlike } = useLikeManager()
+  const { unlike } = useLikeManager()
   const { create, remove } = useBookmarkManager()
   const openLoginDialog = useOpenLoginDialog()
   const currentUser = useUser()
+
+  const [isLiked, setIsLiked] = useState(
+    userLikedPost.toString().includes(currentUser.username.toString().trim()),
+  )
+
+  const [likedUser, setLikedUser] = useState(userLikedPost)
+
   const itemStats = '' as any
 
   const toggleBookmark = () => {
@@ -54,15 +62,85 @@ function ItemViewer({ item, isMyItem }: Props) {
     }
   }
 
-  const toggleLike = () => {
+  const toggleLike = async () => {
     if (!currentUser) {
       openLoginDialog('like')
       return
     }
     if (isLiked) {
-      unlike(id, itemStats)
+      const chicken = (
+        JSON.stringify(
+          likedUser
+            .filter((item) => item !== currentUser.username.trim())
+            .map((item) => item as any),
+        ) as any
+      ).replaceAll('"', "'")
+
+      console.log('chicken', chicken)
+
+      // unlike(id, itemStats)
+      const res = await fetch(`http://localhost:8080/posts/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userLikedPost: (
+            JSON.stringify(
+              likedUser
+                .filter((item) => item !== currentUser.username.trim())
+                .map((item) => item as any),
+            ) as any
+          ).replaceAll('"', "'"),
+        }),
+      })
+
+      const newLikedUser = likedUser.filter(
+        (item) => item !== currentUser.username.trim(),
+      )
+      setLikedUser(newLikedUser)
+      setIsLiked(false)
+
+      const data = await res.json()
+      console.log(
+        '🚀 TAM ~ file: CommentEditor.tsx:95 ~ handleSubmit ~ res:',
+        res.status,
+        data,
+      )
+
+      if (data) {
+        setIsLiked(false)
+      }
     } else {
-      like(id, itemStats)
+      // like(id, itemStats)
+      const res = await fetch(`http://localhost:8080/posts/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userLikedPost: (
+            JSON.stringify([...likedUser, currentUser.username.trim()]) as any
+          ).replaceAll('"', "'"),
+        }),
+      })
+      const chicken22 = (
+        JSON.stringify([...likedUser, currentUser.username.trim()]) as any
+      ).replaceAll('"', "'")
+      console.log('chicken', chicken22.replaceAll('"', "'"))
+
+      setLikedUser([...likedUser, currentUser.username.trim()])
+      setIsLiked(true)
+      const data = await res.json()
+      console.log(
+        '🚀 TAM ~ file: CommentEditor.tsx:95 ~ handleSubmit ~ res:',
+        res.status,
+        data,
+      )
+
+      if (data) {
+        setIsLiked(true)
+      }
     }
   }
 
@@ -70,14 +148,17 @@ function ItemViewer({ item, isMyItem }: Props) {
   const navigate = useNavigate()
   const onClickDelete = () => {
     openDialog({
-      title: '삭제',
-      description: '정말로 삭제하시겠습니까?',
+      title: 'Confirm',
+      description: 'Are you sure you want to delete?',
       mode: 'YESNO',
-      cancelText: '취소',
-      confirmText: '삭제',
+      cancelText: 'NO',
+      confirmText: 'YES',
       async onConfirm() {
+        // alert('gg')
         /** @todo: show fullscreen spinner on loading */
-        await deleteItem(item.id)
+        const res = await deleteItem(item.id)
+        console.log('🚀 TAM ~ file: ItemViewer.tsx:102 ~ onConfirm ~ res:', res)
+
         navigate('/')
       },
     })
@@ -88,13 +169,17 @@ function ItemViewer({ item, isMyItem }: Props) {
   }
 
   const html = useMemo(() => {
-    return MarkdownIt().render(body)
+    return MarkdownIt({
+      html: true,
+      linkify: true,
+      typographer: true,
+    }).render(body)
   }, [body])
 
   return (
     <Block>
       {thumbnail ? (
-        <a href={item.link}>
+        <a href={`http://${item.link}`}>
           <Thumbnail src={thumbnail} />
         </a>
       ) : null}
@@ -114,8 +199,11 @@ function ItemViewer({ item, isMyItem }: Props) {
               <a href={item.link}>{title}</a>
             </Title>
           </ItemInfo>
-          <Button variant="secondary" href={item.link}>
-            방문
+          <Button variant="primary" className="error" onClick={onClickDelete}>
+            Delete
+          </Button>
+          <Button variant="secondary" href={`http://${item.link}`}>
+            Visit
           </Button>
         </ItemHead>
         {isMyItem ? (
@@ -125,8 +213,8 @@ function ItemViewer({ item, isMyItem }: Props) {
               e.preventDefault()
             }}
           >
-            <TextButton onClick={onClickModify}>수정</TextButton>
-            <TextButton onClick={onClickDelete}>삭제</TextButton>
+            <TextButton onClick={onClickModify}>Modify</TextButton>
+            <TextButton onClick={onClickDelete}>Delete</TextButton>
           </MyItemActions>
         ) : null}
         <Body dangerouslySetInnerHTML={{ __html: html }} />
@@ -139,13 +227,13 @@ function ItemViewer({ item, isMyItem }: Props) {
               animate={{ height: 26, opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
             >
-              좋아요 {likes.toLocaleString()}개
+              {likes.toLocaleString()} likes
             </LikesCount>
           )}
         </AnimatePresence>
         <Footer>
           <IconButtons>
-            <LikeButton isLiked={isLiked} onClick={toggleLike} />
+            <LikeButton isLiked={isLiked as any} onClick={toggleLike} />
             <BookmarkButton isActive={isBookmarked} onClick={toggleBookmark} />
           </IconButtons>
           <UserInfo>
@@ -163,12 +251,16 @@ const Block = styled.div`
   & > a {
     display: block;
   }
+
+  .error {
+    background-color: red !important;
+  }
 `
 const Thumbnail = styled.img`
   width: 100%;
   height: auto;
   max-height: 80vh;
-  object-fit: contain;
+  object-fit: cover;
   border-radius: 0px;
   ${media.tablet} {
     border-radius: 12px;

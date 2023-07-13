@@ -51,7 +51,7 @@ function CommentEditor({
     if (viewRef.current) return
     const view = new EditorView({
       extensions: [
-        placeholder('댓글을 입력하세요.'),
+        placeholder('Enter your comment.'),
         commentEditorTheme,
         ...codeMirrorExtensions,
         EditorView.updateListener.of((update) => {
@@ -80,10 +80,11 @@ function CommentEditor({
 
   const handleSubmit = async () => {
     await onSubmit()
+
     onReset()
   }
 
-  const buttonText = mode === 'edit' ? '수정' : '등록'
+  const buttonText = mode === 'edit' ? 'Save' : 'Create'
 
   return (
     <Block>
@@ -108,7 +109,7 @@ function CommentEditor({
             exit={{ height: 0 }}
           >
             <Button variant="text" size="small" onClick={onReset}>
-              취소
+              Cancel
             </Button>
             <Button size="small" onClick={handleSubmit} disabled={isLoading}>
               {isLoading ? <LoadingIndicator color="white" /> : buttonText}

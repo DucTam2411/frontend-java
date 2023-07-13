@@ -13,6 +13,7 @@ import { applyAuth } from '~/lib/applyAuth'
 import { extractError, useNextAppErrorCatch } from '~/lib/error'
 import { media } from '~/lib/media'
 import { useWriteActions, useWriteValue } from '~/states/write'
+import axios from 'axios'
 
 export const action: ActionFunction = async ({ request }) => {
   const applied = await applyAuth(request)
@@ -25,11 +26,38 @@ export const action: ActionFunction = async ({ request }) => {
   const body = form.get('body') as string
 
   try {
+    var data = JSON.stringify({
+      url: link,
+      device: 'desktop',
+      proxyCountry: 'us',
+      fullPage: false,
+    })
+
+    var config = {
+      method: 'post',
+      url: 'https://api.geekflare.com/screenshot',
+      headers: {
+        'x-api-key': '44c59e88-1570-48e8-9761-b4a6354e29ff',
+        'Content-Type': 'application/json',
+      },
+      data: data,
+    }
+
+    let thumbnail = ''
+    await axios(config)
+      .then(function (response) {
+        console.log(JSON.stringify(response.data))
+        thumbnail = response.data.data
+      })
+      .catch(function (error) {
+        console.log(error)
+      })
+
     const item = await createItem({
       link,
       title,
       body,
-      thumbnail: 'https://picsum.photos/2000/1000',
+      thumbnail: thumbnail ?? 'https://picsum.photos/2000/1000',
     })
     return redirect(`/items/${item.id}`)
   } catch (e) {
@@ -65,15 +93,15 @@ function Intro() {
   return (
     <BasicLayout title="뉴스 소개" hasBackButton>
       <WriteFormTemplate
-        description="공유할 뉴스를 소개하세요."
-        buttonText="등록하기"
+        description="Introduce the news you want to share."
+        buttonText="Submit"
         onSubmit={async (e) => {
           e.preventDefault()
           if (form.title === '') {
-            setErrorMessage('제목을 입력해주세요.')
+            setErrorMessage('Error happen.')
             return
           }
-          fetcher.submit(form, {
+          const result = fetcher.submit(form, {
             method: 'post',
           })
         }}
@@ -81,12 +109,12 @@ function Intro() {
       >
         <Group>
           <LabelInput
-            label="제목"
+            label="Title"
             name="title"
             onChange={onChange}
             value={form.title}
           />
-          <LabelEditorGroup label="내용">
+          <LabelEditorGroup label="Article">
             {({ onFocus, onBlur }) => (
               <StyledEditor
                 onFocus={onFocus}

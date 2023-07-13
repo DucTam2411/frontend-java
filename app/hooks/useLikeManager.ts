@@ -6,6 +6,14 @@ type ItemStats = {
   like: number
   commentsCount: number
 }
+export const getUserLikeList = (userLikedString: any) => {
+  const userLiked = userLikedString
+    ? (JSON.parse(
+        userLikedString.replaceAll("'", '"').toLowerCase(),
+      ) as string[])
+    : []
+  return userLiked
+}
 export function useLikeManager() {
   const set = useItemOverrideSetter()
   const abortControllers = useRef(new Map<number, AbortController>()).current

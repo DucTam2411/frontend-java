@@ -7,7 +7,7 @@ import { editComment } from '~/lib/api/items'
 import CommentEditor from './CommentEditor'
 
 interface Props {
-  id: number
+  id: string
   initialText: string
   onClose(): void
 }

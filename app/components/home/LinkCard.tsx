@@ -15,12 +15,14 @@ import { media } from '~/lib/media'
 import { useItemOverrideById } from '~/states/itemOverride'
 import removeMd from 'remove-markdown'
 import { css } from '@emotion/react'
+import { useEffect, useState } from 'react'
 
 interface Props {
   item: Post
+  userLikedPost: string[]
 }
 
-function LinkCard({ item }: Props) {
+function LinkCard({ item, userLikedPost }: Props) {
   const { thumbnail, title, publisher, body, author, createdAt, id } = item
   const user = {
     id: 111,
@@ -32,28 +34,82 @@ function LinkCard({ item }: Props) {
   const currentUser = useUser()
   const { create, remove } = useBookmarkManager()
 
-  const isLiked = itemOverride?.isLiked ?? item.isLiked
+  const [isLiked, setIsLiked] = useState(itemOverride?.isLiked ?? item.isLiked)
   const likes = item.like ?? 0
-  const commentsCount = item.commentsCount
+  console.log(
+    '🚀 TAM ~ file: LinkCard.tsx:37 ~ LinkCard ~ item:',
+    userLikedPost,
+  )
+  const commentsCount = (item as any).comments.length
+  const [likedUser, setLikedUser] = useState(userLikedPost)
+
+  console.log('🚀 TAM ~ file: LinkCard.tsx:38 ~ LinkCard ~ item:', item)
   const isBookmarked = itemOverride?.isBookmarked ?? item.isBookmarked
 
   const openLoginDialog = useOpenLoginDialog()
 
-  const toggleLike = () => {
+  const toggleLike = async () => {
     if (!currentUser) {
       openLoginDialog('like')
       return
     }
     if (isLiked) {
-      unlike(id, {
-        like: likes,
-        commentsCount,
+      // unlike(id, itemStats)
+      const res = await fetch(`http://localhost:8080/posts/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userLikedPost: (
+            JSON.stringify(
+              userLikedPost
+                .filter((item) => item !== currentUser.username.trim())
+                .map((item) => item as any),
+            ) as any
+          ).replaceAll('"', "'"),
+        }),
       })
+      const newList = likedUser.filter(
+        (item) => item !== currentUser.username.trim(),
+      )
+      console.log(
+        '🚀 TAM ~ file: LinkCard.tsx:76 ~ toggleLike ~ likedUser:',
+        newList,
+        likedUser,
+      )
+
+      setLikedUser(newList)
+
+      setIsLiked(false)
     } else {
-      like(id, {
-        like: likes,
-        commentsCount,
+      // like(id, itemStats)
+      const isExist = likedUser.find(
+        (item) => item.trim() === currentUser.username.trim(),
+      )
+      console.log(
+        '🚀 TAM ~ file: LinkCard.tsx:78 ~ toggleLike ~ userLikedPost:',
+        userLikedPost,
+      )
+
+      if (isExist) {
+        return
+      }
+
+      const res = await fetch(`http://localhost:8080/posts/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userLikedPost: (
+            JSON.stringify([...likedUser, currentUser.username.trim()]) as any
+          ).replaceAll('"', "'"),
+        }),
       })
+
+      setLikedUser([...likedUser, currentUser.username.trim()])
+      setIsLiked(true)
     }
   }
 
@@ -70,6 +126,7 @@ function LinkCard({ item }: Props) {
   }
 
   const link = `/items/${item.id}`
+  const counter = (userLikedPost.length ?? 0) + (isLiked ? 1 : 0)
 
   return (
     <Block>
@@ -84,7 +141,7 @@ function LinkCard({ item }: Props) {
           {author ? `${author.name} · ` : ''}
           {publisher?.name}
         </Publisher>
-        <h3>{title}2222</h3>
+        <h3>{title}</h3>
         <p>{removeMd(body)}</p>
       </StyledLink>
       <Spacer />
@@ -97,12 +154,14 @@ function LinkCard({ item }: Props) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              좋아요 {likes?.toLocaleString()}개
+              {isLiked && 'liked'}
             </LikesCount>
           )}
         </AnimatePresence>
         {commentsCount === 0 ? null : (
-          <CommentCount>댓글 {commentsCount?.toLocaleString()}개</CommentCount>
+          <CommentCount>
+            {commentsCount?.toLocaleString()} comments
+          </CommentCount>
         )}
       </LikeCountWrapper>
 

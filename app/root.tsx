@@ -96,7 +96,7 @@ export const loader: LoaderFunction = async ({ request, context }) => {
 
 export const meta: MetaFunction = () => ({
   charset: 'utf-8',
-  title: 'Veltrends',
+  title: 'Daily',
   viewport: 'width=device-width,initial-scale=1',
   'og:image': 'https://veltrends.com/og-image.png',
 })

@@ -82,6 +82,7 @@ export const fetchClient = {
     const query = config?.params
       ? QueryString.stringify(config?.params, { addQueryPrefix: true })
       : ''
+
     const response = await fetch(this.baseUrl.concat(url, query), {
       method: 'GET',
       ...(typeof window === 'undefined' ? {} : { credentials: 'include' }),

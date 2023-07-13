@@ -3,7 +3,7 @@ import { getComments } from '~/lib/api/items'
 import { type UseQueryOptionsOf } from '~/lib/type'
 
 export function useCommentsQuery(
-  itemId: number,
+  itemId: string,
   options: UseQueryOptionsOf<typeof getComments> = {},
 ) {
   return useQuery(
@@ -13,6 +13,6 @@ export function useCommentsQuery(
   )
 }
 
-const extractKey = (itemId: number) => ['comments', itemId]
+const extractKey = (itemId: string) => ['comments', itemId]
 
 useCommentsQuery.extractKey = extractKey

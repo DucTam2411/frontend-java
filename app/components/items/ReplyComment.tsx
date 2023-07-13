@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import styled from '@emotion/styled'
 import { useCreateCommentMutation } from '~/hooks/mutation/useCreateCommentMutation'
@@ -7,7 +7,7 @@ import { useItemId } from '~/hooks/useItemId'
 import CommentEditor from './CommentEditor'
 
 interface Props {
-  parentCommentId: number
+  parentCommentId: string
   onClose(): void
 }
 

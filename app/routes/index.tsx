@@ -18,6 +18,7 @@ import { waitIfNeeded, withCookie } from '~/lib/client'
 import { media } from '~/lib/media'
 import { parseUrlParams } from '~/lib/parseUrlParams'
 import { getWeekRangeFromDate } from '~/lib/week'
+import { useUser } from '~/states/user'
 
 export const loader: LoaderFunction = async ({ request }) => {
   try {
@@ -66,8 +67,8 @@ export const meta: MetaFunction = ({ params, location }) => {
 
     if (query.mode === 'recent') {
       return {
-        title: 'Veltrends - 최신 뉴스',
-        description: '방금 벨트렌즈에 올라온 따끈따끈한 뉴스들을 확인해보세요.',
+        title: 'Daily - Recent',
+        description: 'Daily news',
       }
     }
     if (query.mode === 'past') {
@@ -80,13 +81,13 @@ export const meta: MetaFunction = ({ params, location }) => {
       const formattedEnd = format(new Date(endDate), 'yyyy년 MM월 dd일')
 
       return {
-        title: `Veltrends - 과거 뉴스 (${formattedStart} ~ ${formattedEnd})`,
-        description: `${formattedStart} ~ ${formattedEnd}에 벨트렌즈에 올라온 뉴스들을 인기순으로 확인해보세요.`,
+        title: `Daily - from (${formattedStart} ~ ${formattedEnd})`,
+        description: `${formattedStart} ~ ${formattedEnd} to.`,
       }
     }
 
     return {
-      title: 'Veltrends',
+      title: 'Daily',
       description:
         '개발, IT, 디자인, 스타트업 관련 유익하고 재미있는 소식들을 벨트렌즈에서 확인하세요.',
     }
@@ -115,6 +116,10 @@ export default function Index() {
   const [mode, setMode] = useState<ListMode>(
     (searchParams.get('mode') as any) ?? 'trending',
   )
+
+  const currentUser = useUser()
+  console.log('POST THIS IS CURRENT USER', currentUser, 'chicken')
+
   const defaultDateRange = useMemo(() => getWeekRangeFromDate(new Date()), [])
   const startDate = searchParams.get('start')
   const endDate = searchParams.get('end')
@@ -138,54 +143,35 @@ export default function Index() {
     }
   }, [mode, searchParams])
 
-  // const { data, hasNextPage, fetchNextPage } = useInfiniteQuery(
-  //   [
-  //     'items',
-  //     mode,
-  //     mode === 'past' ? { dateRange: dateRange } : undefined,
-  //   ].filter((item) => !!item),
-  //   ({ pageParam }) =>
-  //     getItems({
-  //       mode,
-  //       cursor: pageParam,
-  //       ...(mode === 'past'
-  //         ? { startDate: dateRange[0], endDate: dateRange[1] }
-  //         : {}),
-  //     }),
-  //   {
-  //     initialData: {
-  //       pageParams: [undefined],
-  //       pages: [initialData],
-  //     },
-  //     getNextPageParam: (lastPage) => {
-  //       if (!lastPage.pageInfo || !lastPage?.pageInfo?.hasNextPage)
-  //         return undefined
-  //       return lastPage.pageInfo.endCursor
-  //     },
-  //   },
-  // )
-
-  // const fetchNext = useCallback(() => {
-  //   if (!hasNextPage) return
-  //   fetchNextPage()
-  // }, [fetchNextPage, hasNextPage])
-
-  // useInfiniteScroll(ref, fetchNext)
-
-  // const items = data?.pages.map((page: any) => page.posts)
-  // console.log(
-  //   '🚀 TAM ~ file: index.tsx:174 ~ Index ~ items:',
-  //   // items,
-  //   // data?.pages,
-  //   data?.pages[0],
-  //   (data?.pages[0] as any).__embedded,
-  // )
-
   const onSelectMode = (mode: ListMode) => {
     setSearchParams({ mode })
   }
   const items = initialData._embedded.posts
+  let mappedItems = items.map((post: Post) => {
+    if ((post as any).userLikedPost) {
+      const listLikedUser: string[] =
+        JSON.parse((post as any).userLikedPost?.replaceAll("'", '"')) ?? []
 
+      if (listLikedUser.includes(currentUser.username.trim())) {
+        return {
+          ...post,
+          isLiked: true,
+        }
+      }
+    }
+    return post
+  }) as Post[]
+
+  if (mode === 'trending') {
+    mappedItems = mappedItems.sort(
+      (item1, item2) =>
+        (item2.comments.length ?? 0) - (item1.comments.length ?? 0),
+    )
+  } else {
+    mappedItems = mappedItems.sort((item1, item2) =>
+      item2.createdAt > item1.createdAt ? 1 : 0,
+    )
+  }
   return (
     <StyledTabLayout>
       <Content>
@@ -193,7 +179,7 @@ export default function Index() {
 
         {mode === 'past' && <WeekSelector dateRange={dateRange} />}
         {items && items.length ? (
-          <LinkCardList items={items as any as Post[]} />
+          <LinkCardList items={mappedItems as any as Post[]} />
         ) : null}
         <div ref={ref} />
       </Content>

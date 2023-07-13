@@ -57,18 +57,41 @@ function AccountSetting() {
     setForm({ ...form, [key]: value })
   }
 
+  const [isEditAuthor, setIsEditAuthor] = useState(false)
+  const [authorName, setAuthorName] = useState(user.author.name)
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     mutateChangePassword(form)
   }
 
+  const onSubmitAuthor = async (e: React.FormEvent) => {
+    e.preventDefault()
+    // alert('go')
+    const res = await fetch(
+      `http://localhost:8080/authors/5ea35caa-2565-4781-a01a-e9292eeaaf2f`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: authorName,
+        }),
+      },
+    ).then(() => {
+      user.setAuthor(authorName)
+      setIsEditAuthor(false)
+    })
+  }
+
   const askUnregister = () => {
     openDialog({
-      title: '회원 탈퇴',
-      description: '정말로 탈퇴하시겠습니까?',
+      title: 'Confirm',
+      description: 'Do you really want to delete account??',
       mode: 'YESNO',
-      cancelText: '취소',
-      confirmText: '탈퇴',
+      cancelText: 'NO',
+      confirmText: 'YES',
       async onConfirm() {
         try {
           await unregister()
@@ -83,38 +106,80 @@ function AccountSetting() {
   return (
     <Block>
       <div>
-        <Title>내 계정</Title>
+        <Title>My account</Title>
         <Section>
-          <h4>아이디</h4>
+          <h4>Username</h4>
           <Username>{user.username}</Username>
         </Section>
         <Section>
-          <h4>비밀번호</h4>
+          <h4>Password</h4>
           <form onSubmit={onSubmit}>
             <InputGroup>
               <Input
                 name="oldPassword"
-                placeholder="현재 비밀번호"
+                placeholder="Old password"
                 type="password"
                 onChange={onChange}
                 value={form.oldPassword}
               />
               <Input
                 name="newPassword"
-                placeholder="새 비밀번호"
+                placeholder="New password"
                 type="password"
                 onChange={onChange}
                 value={form.newPassword}
               />
             </InputGroup>
             <Button variant="secondary" type="submit">
-              비밀번호 변경
+              Change your password
             </Button>
+          </form>
+        </Section>
+
+        <Section>
+          <h4>Author</h4>
+          <form onSubmit={onSubmitAuthor}>
+            <InputGroup>
+              <div style={{ display: 'flex' }}>
+                <Username>{user.author.name}</Username>
+                <button
+                  style={{
+                    display: 'inline',
+                    marginLeft: '10px',
+                    cursor: 'pointer',
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault()
+
+                    setIsEditAuthor(!isEditAuthor)
+                  }}
+                >
+                  🖊️
+                </button>
+              </div>
+              {isEditAuthor && (
+                <Input
+                  name="newAuthor"
+                  placeholder="New name"
+                  type="text"
+                  onChange={(e) => setAuthorName(e.target.value)}
+                  value={authorName}
+                />
+              )}
+            </InputGroup>
+
+            {isEditAuthor && (
+              <Button variant="secondary" type="submit">
+                Change your author
+              </Button>
+            )}
           </form>
         </Section>
       </div>
       <UnregisterWrapper>
-        <UnregisterButton onClick={askUnregister}>계정 탈퇴</UnregisterButton>
+        <UnregisterButton onClick={askUnregister}>
+          Delete account
+        </UnregisterButton>
       </UnregisterWrapper>
     </Block>
   )
@@ -177,6 +242,7 @@ const UnregisterButton = styled.button`
   font-size: 16px;
   color: #f53e3e;
   text-decoration: underline;
+  cursor: pointer;
 `
 
 const UnregisterWrapper = styled.div`

@@ -30,7 +30,7 @@ export interface Post {
   // Comment part
   like: number
   commentsCount: number
-  comments: Comment[]
+  comments: PostComment[]
 }
 
 // export interface ItemStats {
@@ -47,8 +47,9 @@ export interface Publisher {
 }
 
 export interface User {
-  id: number
+  id: string
   username: string
+  author?: Author
 }
 
 export interface PageInfo {
@@ -56,6 +57,8 @@ export interface PageInfo {
   endCursor?: number | null
   hasNextPage: boolean
 }
+
+export interface ItemStats {}
 
 export interface LikeItemResult {
   id: number
@@ -65,23 +68,18 @@ export interface LikeItemResult {
 
 export type UnlikeItemResult = LikeItemResult
 
-export interface Comment {
+export interface PostComment {
   id: string
-  text: string
+  content: string
   createdAt: string
   updatedAt: string
   likes: number
   subcommentsCount: number
   user: User
   mentionUser: User | null
-  subcomments?: Comment[]
+  subcomments?: PostComment[]
   isLiked: boolean
   isDeleted: boolean
-}
-
-export interface User {
-  id: number
-  username: string
 }
 
 export interface LikeCommentResult {
@@ -95,7 +93,7 @@ export interface SearchResultItem {
   id: number
   link: string
   publisher: Publisher
-  author: null
+  author: any
   likes: number
   title: string
   body: string

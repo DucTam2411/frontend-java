@@ -14,10 +14,10 @@ import { type SearchItemsResult } from '~/lib/api/types'
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import { useInfiniteScroll } from '~/hooks/useInfiniteScroll'
 import DesktopHeader from '~/components/base/DesktopHeader'
-import { waitIfNeeded, withCookie } from '~/lib/client'
+import { withCookie } from '~/lib/client'
 
 export const loader: LoaderFunction = async ({ request }) => {
-  await waitIfNeeded(request)
+  // await waitIfNeeded(request)
   const { q } = parseUrlParams<{ q?: string }>(request.url)
   if (!q) {
     return json({
@@ -45,8 +45,8 @@ export const meta: MetaFunction = ({ params, data, location }) => {
   const { totalCount } = data as SearchItemsResult
 
   return {
-    title: `"${q}" 검색 결과 - veltrends`,
-    description: `"${q}" 검색 결과입니다. 총 ${totalCount}개의 검색 결과가 있습니다.`,
+    title: `"${q}" Search - daily`,
+    description: `"${q}" This is the search result ${totalCount}개의 검색 결과가 있습니다.`,
   }
 }
 
@@ -67,8 +67,8 @@ export default function Search() {
     {
       enabled: debouncedSearchText !== '',
       getNextPageParam: (lastPage, pages) => {
-        if (!lastPage.pageInfo.hasNextPage) return null
-        return lastPage.pageInfo.nextOffset
+        if (!lastPage?.pageInfo?.hasNextPage) return null
+        return lastPage?.pageInfo?.nextOffset
       },
       initialData: {
         pageParams: [undefined],
@@ -99,7 +99,14 @@ export default function Search() {
     navigate('/search?' + stringify({ q: debouncedSearchText }))
   }, [debouncedSearchText, navigate])
 
-  const items = infiniteData?.pages.flatMap((page) => page.list)
+  const items = infiniteData?.pages.flatMap(
+    (page) => (page as any)?._embedded?.posts ?? [],
+  )
+  console.log(
+    '🚀 TAM ~ file: search.tsx:103 ~ Search ~ infiniteData:',
+    infiniteData,
+    items,
+  )
 
   return (
     <TabLayout

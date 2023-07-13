@@ -6,14 +6,15 @@ import { colors } from '~/lib/colors'
 import { css } from '@emotion/react'
 
 function SettingIndex() {
-  const logout = useLogout()
+  // const logout = useLogout()
+  const logout = () => {}
 
   return (
     <TabLayout>
       <Block>
         <ListWrapper>
-          <ListItemLink to="/setting/account">내 계정</ListItemLink>
-          <ListItem onClick={logout}>로그아웃</ListItem>
+          <ListItemLink to="/setting/account">My account</ListItemLink>
+          <ListItem onClick={logout}>Logout</ListItem>
         </ListWrapper>
       </Block>
     </TabLayout>

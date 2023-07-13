@@ -1,12 +1,16 @@
-import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import styled from '@emotion/styled'
 import { useCreateCommentMutation } from '~/hooks/mutation/useCreateCommentMutation'
 import { useCommentsQuery } from '~/hooks/query/useCommentsQuery'
 import { useItemId } from '~/hooks/useItemId'
 import CommentEditor from './CommentEditor'
+import { useQueryClient } from '@tanstack/react-query'
+import type { PostComment } from '~/lib/api/types'
 
-function WriteComment() {
+interface Props {
+  addNewComment: (comment: PostComment) => void
+}
+function WriteComment(props: Props) {
   const [text, setText] = useState('')
   const itemId = useItemId()
   const queryClient = useQueryClient()
@@ -20,10 +24,11 @@ function WriteComment() {
   const onSubmit = async () => {
     if (!itemId) return
     if (text === '') return
-    await writeComment({
+    const comment = await writeComment({
       itemId,
       text,
     })
+    props.addNewComment(comment)
   }
 
   return (

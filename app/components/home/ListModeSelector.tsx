@@ -35,17 +35,12 @@ function ListModeSelector({ mode, onSelectMode }: Props) {
         {
           mode: 'trending',
           icon: <Trending />,
-          name: '트렌딩',
+          name: 'Trending',
         },
         {
           mode: 'recent',
           icon: <Time />,
-          name: '최신',
-        },
-        {
-          mode: 'past',
-          icon: <Calendar />,
-          name: '과거',
+          name: 'Recent',
         },
       ] as const,
     [],

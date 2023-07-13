@@ -1,4 +1,5 @@
-import { json, MetaFunction, type LoaderFunction } from '@remix-run/node'
+import type { MetaFunction } from '@remix-run/node'
+import { json, type LoaderFunction } from '@remix-run/node'
 import { useLoaderData, useNavigate } from '@remix-run/react'
 import styled from '@emotion/styled'
 import MoreVertButton from '~/components/base/MoreVertButton'
@@ -13,15 +14,24 @@ import { useBottomSheetModalActions } from '~/states/bottomSheetModal'
 import { useOpenDialog } from '~/states/dialog'
 import { waitIfNeeded, withCookie } from '~/lib/client'
 import removeMd from 'remove-markdown'
+import type { PostComment } from '~/lib/api/types'
+import { useState } from 'react'
 
 export const loader: LoaderFunction = async ({ request, context, params }) => {
   await waitIfNeeded(request)
 
   const itemId = params.itemId ?? ' '
-  const [item, comments] = await withCookie(
+
+  let [item, comments] = await withCookie(
     () =>
       Promise.all([getItem(itemId.toString()), getComments(itemId.toString())]),
     request,
+  )
+  comments = item.comments
+  console.log(
+    '🚀 TAM ~ file: $itemId.tsx:29 ~ constloader:LoaderFunction= ~ comments:',
+    comments,
+    item,
   )
 
   return json(
@@ -67,7 +77,7 @@ export const meta: MetaFunction = ({ data }: { data: ItemLoaderData }) => {
 
 interface ItemLoaderData {
   item: any
-  comments: Comment[]
+  comments: PostComment[]
 }
 
 function Item() {
@@ -79,10 +89,9 @@ function Item() {
 
   const user = useUser()
   const isMyItem = user?.id === loaderData.item.user.id
+  console.log('🚀 TAM ~ file: $itemId.tsx:91 ~ Item ~ user:', user, loaderData)
 
-  const { data: comments } = useCommentsQuery(loaderData.item.id, {
-    initialData: loaderData.comments as any,
-  })
+  const commentsProps = loaderData.comments as PostComment[]
 
   const onClickMore = () => {
     openBottomSheetModal([
@@ -112,6 +121,32 @@ function Item() {
     ])
   }
 
+  const [comments, setComments] = useState(commentsProps)
+
+  console.log('🚀 TAM ~ file: $itemId.tsx:134 ~ Item ~ loaderData:', loaderData)
+  const userLikedPost = loaderData.item.userLikedPost
+    ? (JSON.parse(
+        loaderData.item.userLikedPost
+          .toString()
+          .replaceAll("'", '"')
+          .toLowerCase(),
+      ) as string[])
+    : []
+
+  const userName = user.username.toString().toLowerCase().trim()
+  const isUserLikedPost = userLikedPost.find(
+    (userId) => userId.trim() === userName.trim(),
+  )
+  // console.log(
+  //   '🚀 TAM ~ file: $itemId.tsx:127 ~ Item ~ loaderData.item.userLikedPost:',
+  //   loaderData.item.userLikedPost.toString().replaceAll("'", '"'),
+  //   typeof user.username.toString(),
+  //   isUserLikedPost,
+  //   user.username.toLowerCase(),
+
+  //   userLikedPost.includes(user.username.toString()),
+  // )
+
   return (
     <BasicLayout
       hasBackButton
@@ -119,9 +154,17 @@ function Item() {
       headerRight={isMyItem && <MoreVertButton onClick={onClickMore} />}
     >
       <Content>
-        <ItemViewer item={loaderData.item} isMyItem={isMyItem} />
+        <ItemViewer
+          item={loaderData.item}
+          isMyItem={isMyItem}
+          userLikedPost={userLikedPost ?? ''}
+        />
         {/* `comments` is always valid due to SSR */}
-        {/* <CommentList comments={comments!} /> */}
+        <CommentList
+          comments={comments!}
+          setComments={setComments}
+          user={user as any}
+        />
       </Content>
     </BasicLayout>
   )

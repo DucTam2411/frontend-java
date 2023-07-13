@@ -8,11 +8,26 @@ interface Props {
 }
 
 function SearchResultCardList({ items }: Props) {
+  console.log(
+    '🚀 TAM ~ file: SearchResultCardList.tsx:11 ~ SearchResultCardList ~ items:',
+    items,
+
+    items.filter((item) => item !== undefined).length === 0,
+  )
+  if (
+    !items.length &&
+    items.filter((item) => item !== undefined).length === 0
+  ) {
+    return <Block>Nothing here</Block>
+  }
+
   return (
     <Block>
-      {items.map((item) => (
-        <SearchResultCard item={item} key={item.id} />
-      ))}
+      {items &&
+        items.length &&
+        items
+          .filter((item) => item !== undefined)
+          .map((item) => <SearchResultCard item={item} key={item?.id ?? ''} />)}
     </Block>
   )
 }

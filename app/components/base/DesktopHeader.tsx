@@ -13,7 +13,7 @@ function DesktopHeader() {
   return (
     <Block>
       <HomeLink to="/">
-        <StyledLogo />
+        <StyledLogo>Daily</StyledLogo>
       </HomeLink>
       <Content>
         <Addon></Addon>
@@ -49,11 +49,14 @@ const Block = styled.div`
   }
 `
 
-const StyledLogo = styled(Logo)`
+const StyledLogo = styled.div`
   display: block;
   width: 84px;
   height: 17px;
   width: auto;
+  color: black;
+  font-weight: 900;
+  font-size: 1.3rem;
 `
 
 const Content = styled.div`

@@ -1,60 +1,63 @@
 import styled from '@emotion/styled'
-import { useUser } from '~/states/user'
+import { useNavigate } from '@remix-run/react'
+import MarkdownIt from 'markdown-it'
+import { useCallback, useMemo, useState } from 'react'
 import { useCommentLike } from '~/hooks/useCommentLike'
 import { useDateDistance } from '~/hooks/useDateDistance'
 import { useDeleteComment } from '~/hooks/useDeleteComment'
 import { useItemId } from '~/hooks/useItemId'
 import { useOpenLoginDialog } from '~/hooks/useOpenLoginDialog'
-import { type Comment } from '~/lib/api/types'
+import { type PostComment } from '~/lib/api/types'
 import { colors } from '~/lib/colors'
-import LikeButton from '../system/LikeButton'
-import { SpeechBubble, MoreVert } from '../vectors'
-import SubcommentList from './SubcommentList'
+import { isMobile } from '~/lib/isMobile'
+import { markdownStyles } from '~/lib/styles'
 import { useBottomSheetModalActions } from '~/states/bottomSheetModal'
 import { useCommentLikeById } from '~/states/commentLikes'
-import { useCallback, useMemo, useState } from 'react'
-import ModifyComment from './ModifyComment'
-import ReplyComment from './ReplyComment'
-import { isMobile } from '~/lib/isMobile'
+import { useUser } from '~/states/user'
+import LikeButton from '../system/LikeButton'
 import PopperMenu from '../system/PopperMenu'
-import MarkdownIt from 'markdown-it'
-import { markdownStyles } from '~/lib/styles'
+import { MoreVert } from '../vectors'
+import ModifyComment from './ModifyComment'
 
 interface Props {
-  comment: Comment
+  comment: PostComment
   isSubcomment?: boolean
+  deleteCommentProps: (commentId: string) => void
+  editCommentProps?: (comment: PostComment) => void
 }
 
-function CommentItem({ comment, isSubcomment }: Props) {
-  const { user, text, createdAt, subcomments, mentionUser, isDeleted } = comment
+function CommentItem({ comment, deleteCommentProps, editCommentProps }: Props) {
+  let { user, content: text, createdAt, mentionUser, isDeleted } = comment
+
   const itemId = useItemId()
   const commentLike = useCommentLikeById(comment.id)
   const { like, unlike } = useCommentLike()
   const openLoginDialog = useOpenLoginDialog()
   const currentUser = useUser()
-  const isMyComment = comment.user.id === currentUser?.id
+  const isMyComment =
+    comment.user.id?.toString() ?? '' === currentUser?.id.toString()
   const { open: openBottomSheetModal } = useBottomSheetModalActions()
   const deleteComment = useDeleteComment()
-  const [isReplying, setIsReplying] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [isPopperVisible, setIsPopperVisible] = useState(false)
 
   const items = useMemo(
     () => [
+      // {
+      //   name: 'Edit',
+      //   onClick: () => {
+      //     setIsEditing(true)
+      //   },
+      // },
       {
-        name: '수정',
-        onClick: () => {
-          setIsEditing(true)
-        },
-      },
-      {
-        name: '삭제',
+        name: 'Delete',
         onClick: () => {
           deleteComment(comment.id)
+          deleteCommentProps(comment.id)
         },
       },
     ],
-    [comment.id, deleteComment],
+    [comment.id, deleteComment, deleteCommentProps],
   )
 
   const withMention = useMemo(() => {
@@ -79,7 +82,8 @@ function CommentItem({ comment, isSubcomment }: Props) {
     // setIsPopperVisible(false)
   }, [])
 
-  const likes = commentLike?.likes ?? comment.likes
+  // const likes = commentLike?.likes ?? comment.likes
+  const likes: number = 22
   const isLiked = commentLike?.isLiked ?? comment.isLiked
 
   const toggleLike = () => {
@@ -103,28 +107,16 @@ function CommentItem({ comment, isSubcomment }: Props) {
       })
     }
   }
-
-  const onReply = () => {
-    setIsReplying(true)
-  }
-
   const dateDistance = useDateDistance(createdAt)
 
-  const onCloseEdit = () => {
+  const onCloseEdit = (newComment: PostComment) => {
     setIsEditing(false)
-  }
-
-  const onCloseReply = () => {
-    setIsReplying(false)
   }
 
   if (isDeleted) {
     return (
       <Block>
         <DeletedText>삭제된 댓글입니다.</DeletedText>
-        {!isSubcomment && subcomments && (
-          <SubcommentList comments={subcomments} />
-        )}
       </Block>
     )
   }
@@ -146,8 +138,6 @@ function CommentItem({ comment, isSubcomment }: Props) {
       </Block>
     )
   }
-
-  // {mentionUser ? <Mention>@{mentionUser.username}</Mention> : null}
 
   return (
     <Block data-comment-id={comment.id}>
@@ -176,21 +166,7 @@ function CommentItem({ comment, isSubcomment }: Props) {
           <LikeButton size="small" isLiked={isLiked} onClick={toggleLike} />
           <LikeCount>{likes === 0 ? '' : likes.toLocaleString()}</LikeCount>
         </LikeBlock>
-        <ReplyButton onClick={onReply}>
-          <SpeechBubble />
-          답글 달기
-        </ReplyButton>
       </CommentFooter>
-
-      {isReplying ? (
-        <ReplyWrapper>
-          <ReplyComment parentCommentId={comment.id} onClose={onCloseReply} />
-        </ReplyWrapper>
-      ) : null}
-
-      {!isSubcomment && subcomments && (
-        <SubcommentList comments={subcomments} />
-      )}
     </Block>
   )
 }

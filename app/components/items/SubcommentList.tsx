@@ -1,9 +1,9 @@
 import styled from '@emotion/styled'
-import { type Comment } from '~/lib/api/types'
+import { type PostComment } from '~/lib/api/types'
 import CommentItem from './CommentItem'
 
 interface Props {
-  comments: Comment[]
+  comments: PostComment[]
 }
 
 function SubcommentList({ comments }: Props) {

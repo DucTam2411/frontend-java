@@ -3,7 +3,7 @@ import {
   type Post,
   type GetItemsResult,
   type LikeItemResult,
-  type Comment,
+  type PostComment,
   type LikeCommentResult,
   type UnlikeCommentResult,
   type ListMode,
@@ -33,8 +33,6 @@ export async function getItems({
   startDate?: string
   endDate?: string
 }) {
-  console.log('🚀 TAM ~ file: items.ts:30 ~ fetchClient:', fetchClient.baseUrl)
-
   const response = await fetchClient.get<GetItemsResult>(
     '/posts'.concat(
       qs.stringify(
@@ -42,9 +40,10 @@ export async function getItems({
         {
           addQueryPrefix: true,
         },
-      ),
+      ) + '&sort=-createdAt',
     ),
   )
+
   return response.data
 }
 
@@ -68,7 +67,7 @@ export async function likeItem(itemId: number, controller?: AbortController) {
 
 export async function unlikeItem(itemId: number, controller?: AbortController) {
   const response = await fetchClient.delete<LikeItemResult>(
-    `/posts/${itemId}/likes`,
+    ` /posts/${itemId}/likes`,
     {
       signal: controller?.signal,
     },
@@ -101,11 +100,17 @@ interface CreateItemParams {
 }
 
 export async function deleteItem(itemId: number) {
-  return fetchClient.delete(`/posts/${itemId}`)
+  const res = fetch(`http://localhost:8080/posts/${itemId}`, {
+    method: 'DELETE',
+  })
+
+  return res
 }
 
 export async function getComments(itemId: string) {
-  const response = await fetchClient.get<Comment[]>(`/posts/${itemId}/comments`)
+  const response = await fetchClient.get<PostComment[]>(
+    `/posts/${itemId}/comments`,
+  )
   return response.data
 }
 
@@ -114,19 +119,29 @@ export async function createComment({
   text,
   parentCommentId,
 }: {
-  itemId: number
-  parentCommentId?: number
+  itemId: string
+  parentCommentId?: string
   text: string
 }) {
-  const response = await fetchClient.post<Comment>(
-    `/posts/${itemId}/comments`,
-    {
-      itemId,
-      parentCommentId,
-      text,
+  const res = await fetch('http://localhost:8080/comments', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
     },
+    body: JSON.stringify({
+      content: text,
+      post: `http://localhost:8080/posts/${itemId}`,
+      user: 'http://localhost:8080/users/44c96da8-02c6-11ee-be56-0242ac120002',
+    }),
+  })
+  const data = await res.json()
+  console.log(
+    '🚀 TAM ~ file: CommentEditor.tsx:95 ~ handleSubmit ~ res:',
+    res.status,
+    data,
   )
-  return response.data
+
+  return data
 }
 
 export async function likeComment({
@@ -173,10 +188,19 @@ export async function deleteComment({
   itemId: string
   commentId: string
 }) {
-  const response = await fetchClient.delete(
-    `/posts/${itemId}/comments/${commentId}`,
+  const res = await fetch(`http://localhost:8080/comments/${commentId}`, {
+    method: 'DELETE',
+  })
+  const data = await res.json()
+
+  console.log(
+    '🚀 TAM ~ file: CommentEditor.tsx:95 ~ handleSubmit ~ res:',
+    res.status,
+    data,
+    commentId,
   )
-  return response.data
+
+  return data
 }
 
 export async function editComment({
@@ -184,16 +208,26 @@ export async function editComment({
   text,
   commentId,
 }: {
-  itemId: number
-  commentId?: number
+  itemId: string
+  commentId?: string
   text: string
 }) {
-  const response = await fetchClient.patch<Comment>(
-    `/posts/${itemId}/comments/${commentId}`,
-    {
-      itemId,
-      text,
+  const res = await fetch(`http://localhost:8080/comments/${commentId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
     },
+    body: JSON.stringify({
+      content: text,
+    }),
+  })
+  const data = await res.json()
+
+  console.log(
+    '🚀 TAM ~ file: CommentEditor.tsx:95 ~ handleSubmit ~ res:',
+    res.status,
+    data,
   )
-  return response.data
+
+  return data
 }

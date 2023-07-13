@@ -12,15 +12,7 @@ import { getBookmarks } from '~/lib/api/bookmark'
 import { type GetBookmarksResult } from '~/lib/api/types'
 import { withCookie } from '~/lib/client'
 import { media } from '~/lib/media'
-import { checkIsLoggedIn } from '~/lib/protectRoute'
-
-export const loader: LoaderFunction = async ({ request, context }) => {
-  const isLoggedIn = await checkIsLoggedIn(request)
-  if (!isLoggedIn) return redirect('/auth/login?next=/bookmarks')
-
-  const bookmarks = await withCookie(() => getBookmarks(), request)
-  return json(bookmarks)
-}
+import { useUser } from '~/states/user'
 
 export const meta: MetaFunction = () => {
   return { title: '북마크', robots: 'noindex' }
@@ -30,38 +22,58 @@ export default function Bookmarks() {
   const initialData = useLoaderData<GetBookmarksResult>()
   const ref = useRef<HTMLDivElement>(null)
 
-  const { data, hasNextPage, fetchNextPage } = useInfiniteQuery(
-    ['bookmarks'],
-    ({ pageParam }) => getBookmarks(pageParam),
-    {
-      initialData: {
-        pageParams: [undefined],
-        pages: [initialData],
-      },
-      getNextPageParam: (lastPage) => {
-        if (!lastPage.pageInfo.hasNextPage) return undefined
-        return lastPage.pageInfo.nextOffset
-      },
-    },
-  )
+  // const { data, hasNextPage, fetchNextPage } = useInfiniteQuery(
+  //   ['bookmarks'],
+  //   ({ pageParam }) => getBookmarks(pageParam),
+  //   {
+  //     initialData: {
+  //       pageParams: [undefined],
+  //       pages: [initialData],
+  //     },
+  //     getNextPageParam: (lastPage) => {
+  //       if (!lastPage.pageInfo.hasNextPage) return undefined
+  //       return lastPage.pageInfo.nextOffset
+  //     },
+  //   },
+  // )
 
-  useInfiniteScroll(ref, fetchNextPage)
+  // useInfiniteScroll(ref, fetchNextPage)
+  const user = useUser()
+  const { data } = useInfiniteQuery(['bookmarks'], ({ pageParam }) =>
+    getBookmarks(user.username),
+  ) as any
 
-  const items = data?.pages.flatMap((page) =>
-    page.list.map((bookmark) => bookmark.item),
-  )
+  console.log('🚀 TAM ~ file: bookmarks.tsx:43 ~ Bookmarks ~ data:', data)
 
+  let items = data ? data.pages[0]._embedded.posts : []
+  items = items.map((item: any) => ({ ...item, liked: true }))
+
+  const mappedItems = items.map((post: any) => {
+    if ((post as any).userLikedPost) {
+      const listLikedUser: string[] =
+        JSON.parse((post as any).userLikedPost?.replaceAll("'", '"')) ?? []
+      // []
+
+      if (listLikedUser.includes(user.username.trim())) {
+        return {
+          ...post,
+          isLiked: true,
+        }
+      }
+    }
+    return post
+  })
+
+  console.log('🚀 TAM ~ file: bookmarks.tsx:49 ~ Bookmarks ~ items:', items)
   return (
     <StyledTabLayout>
-      {items?.length === 0 ? (
+      {mappedItems?.length === 0 ? (
         <EmptyList
-          message={
-            '북마크가 없습니다.\n나중에 다시 보고 싶은 링크를 북마크에 추가해보세요.'
-          }
+          message={`You don't have any bookmarks.\nTry bookmarking a link that you want to see again later`}
         />
       ) : null}
       <Content>
-        {items ? <LinkCardList items={items} /> : null}
+        {mappedItems ? <LinkCardList items={mappedItems} /> : null}
         <div ref={ref} />
       </Content>
     </StyledTabLayout>

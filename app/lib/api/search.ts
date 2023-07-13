@@ -1,12 +1,22 @@
 import { fetchClient } from '../client'
 import { type SearchItemsResult } from './types'
 
-export async function searchItems({ q, offset }: { q: string; offset?: number }) {
-  const response = await fetchClient.get<SearchItemsResult>('/api/search', {
-    params: {
-      q,
-      offset,
+export async function searchItems({
+  q,
+  offset,
+}: {
+  q: string
+  offset?: number
+}) {
+  const response = await fetchClient.get<SearchItemsResult>(
+    '/posts/search/findByTitleContainingOrBodyContaining',
+    {
+      params: {
+        titleKeyword: q,
+        bodyKeyword: q,
+        offset,
+      },
     },
-  })
+  )
   return response.data
 }

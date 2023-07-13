@@ -16,6 +16,7 @@
     "@remix-run/vercel": "^1.7.3",
     "@tanstack/react-query": "^4.10.3",
     "@vercel/node": "^2.4.4",
+    "axios": "^1.4.0",
     "cm6-theme-basic-light": "^0.2.0",
     "codemirror": "^6.0.1",
     "date-fns": "^2.29.1",

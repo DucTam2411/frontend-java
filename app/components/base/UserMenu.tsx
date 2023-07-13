@@ -37,14 +37,14 @@ function UserMenu({ visible, onClose }: Props) {
         >
           <TriangleBorder />
           <Triangle />
-          <MenuItem isDesktopHidden onClick={() => navigate('/write')}>
-            새 글 등록
-          </MenuItem>
+          <MenuItem onClick={() => navigate('/write')}>New post </MenuItem>
           <MenuItem onClick={() => navigate('/setting/account')}>
-            내 계정
+            Account
           </MenuItem>
-          <MenuItem onClick={() => navigate('/bookmarks')}>북마크</MenuItem>
-          <MenuItem onClick={logout}>로그아웃</MenuItem>
+          <MenuItem onClick={() => navigate('/bookmarks')}>
+            Favorite posts
+          </MenuItem>
+          <MenuItem onClick={logout}>Logout</MenuItem>
         </Block>
       ) : null}
     </AnimatePresence>

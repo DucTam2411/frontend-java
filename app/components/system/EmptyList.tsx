@@ -6,7 +6,7 @@ interface Props {
   message?: string
 }
 
-function EmptyList({ message = '리스트가 비어있습니다.' }: Props) {
+function EmptyList({ message = 'Post empty.' }: Props) {
   return <Block>{message}</Block>
 }
 
