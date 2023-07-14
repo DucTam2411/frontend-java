@@ -38,7 +38,7 @@ export const meta: MetaFunction = ({ params, data, location }) => {
   const { q } = QueryString.parse(location.search, { ignoreQueryPrefix: true })
   if (!q) {
     return {
-      title: '검색',
+      title: 'Search',
       robots: 'noindex',
     }
   }

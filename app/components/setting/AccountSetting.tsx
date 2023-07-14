@@ -28,8 +28,8 @@ function AccountSetting() {
   const { mutate: mutateChangePassword } = useMutation(changePassword, {
     onSuccess: () => {
       openDialog({
-        title: '비밀번호 변경',
-        description: '비밀번호가 변경되었습니다.',
+        title: 'Account setting',
+        description: 'Open account setting',
       })
       reset()
     },
@@ -38,7 +38,7 @@ function AccountSetting() {
       reset()
       if (error.name === 'BadRequest') {
         openDialog({
-          title: '실패',
+          title: 'Error',
           description:
             '8자 이상, 영문/숫자/특수문자 중 2가지 이상 입력해주세요.',
         })

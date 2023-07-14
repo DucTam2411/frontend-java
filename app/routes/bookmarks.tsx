@@ -15,7 +15,7 @@ import { media } from '~/lib/media'
 import { useUser } from '~/states/user'
 
 export const meta: MetaFunction = () => {
-  return { title: '북마크', robots: 'noindex' }
+  return { title: 'Favorite', robots: 'noindex' }
 }
 
 export default function Bookmarks() {
